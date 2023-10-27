@@ -53,3 +53,15 @@ img {
 #film-info {
   padding-bottom: 15px;
 }
+
+/* Hide the "Movie titles will go here" text when movie list is loaded */
+#films li:first-child {
+  display: none;
+  pointer-events: none;
+}
+
+
+
+#films li {
+  cursor: pointer;
+}

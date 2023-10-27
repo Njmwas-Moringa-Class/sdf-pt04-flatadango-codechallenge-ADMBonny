@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const availableTickets = document.getElementById('ticket-num');
   const description = document.getElementById('film-info');
   const filmsList = document.getElementById('films');
+  const buyTicketButton = document.getElementById('buy-ticket');
 
   function handleNetworkError(error) {
     console.error('Network error:', error);
@@ -21,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showtime.textContent = movie.showtime;
     availableTickets.textContent = movie.capacity - movie.tickets_sold;
     description.textContent = movie.description;
+    updateBuyTicketButtonState();
   }
 
   function loadFirstMovieDetails() {
@@ -51,16 +53,40 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch((error) => handleNetworkError(error));
   }
 
-  // Function to handle buying a ticket
   function buyTicket() {
     const availableTicketsCount = parseInt(availableTickets.textContent);
-    
-    // Check if there are available tickets
+
     if (availableTicketsCount > 0) {
-      // Decrease the number of available tickets by 1
       availableTickets.textContent = availableTicketsCount - 1;
+      updateBuyTicketButtonState();
     } else {
       alert('Sorry, this showing is sold out.');
+    }
+  }
+
+  function updateBuyTicketButtonState() {
+    const availableTicketsCount = parseInt(availableTickets.textContent);
+    const currentMovieId = filmsList.querySelector('.selected').dataset.id;
+    const otherMovies = Array.from(filmsList.querySelectorAll('.film.item')).filter(item => item.dataset.id !== currentMovieId);
+
+    if (availableTicketsCount === 0) {
+      buyTicketButton.textContent = 'Sold Out';
+      otherMovies.forEach(item => {
+        const tickets = parseInt(item.dataset.tickets);
+        if (tickets <= 0) {
+          item.classList.add('sold-out');
+        }
+      });
+    } else {
+      buyTicketButton.textContent = 'Buy Ticket';
+      otherMovies.forEach(item => {
+        const tickets = parseInt(item.dataset.tickets);
+        if (tickets <= 0) {
+          item.classList.add('sold-out');
+        } else {
+          item.classList.remove('sold-out');
+        }
+      });
     }
   }
 
@@ -68,7 +94,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const listItem = document.createElement('li');
     listItem.classList.add('film', 'item');
     listItem.textContent = movie.title;
-    listItem.addEventListener('click', () => loadMovieDetails(movie.id));
+    listItem.dataset.id = movie.id;
+    listItem.dataset.tickets = movie.capacity - movie.tickets_sold;
+    listItem.addEventListener('click', () => {
+      loadMovieDetails(movie.id);
+      const selected = filmsList.querySelector('.selected');
+      if (selected) {
+        selected.classList.remove('selected');
+      }
+      listItem.classList.add('selected');
+    });
     return listItem;
   }
 
@@ -86,14 +121,11 @@ document.addEventListener('DOMContentLoaded', () => {
           filmsList.appendChild(listItem);
         });
 
-        // Load and display the details of the first movie in the list
         loadFirstMovieDetails();
       })
       .catch((error) => handleNetworkError(error));
   }
 
-  const buyTicketButton = document.getElementById('buy-ticket');
   buyTicketButton.addEventListener('click', buyTicket);
-
   loadAllMoviesMenu();
 });
